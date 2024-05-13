@@ -1,25 +1,27 @@
 #install.packages('mvtnorm')# for multivariate normal distribution
 #library(mvtnorm)# for multivariate normal distribution
 rm(list=ls())
+start.time<-Sys.time()#For timing how long this simulation takes.
+
 n<-10 #loci
 a<-5 #alleles per loci
 Htheta<-0 #mean of fitness function
 omega2<-1 #variance of fitness function
 K<-100 #carrying capacity
 Tmax<-1000 #time steps
+MO<-8 #maximum offspring per breeding pair.  Binomial at line 53
 
 #BEGIN Initialize a population
-MO<-8 #maximum offspring per breeding pair.  Binomial at line 53
 B<-8 # for mutation rate below
 Ne<- 2*B/(2*B-1)*K
 mu<-0.001 # mutation rate As per Holt et al.
-alpha2<-0.05
+alpha2<-0.05#mutation magnitude, line 65.
 Vs<-2 #See Burger and Lynch 1995, p. 152
 sig_SHC<-4*n*mu*alpha2*Ne/(1+ (alpha2*Ne/Vs))
 sigH<-rep(sig_SHC,a)
 muH<-matrix(data=0,nrow=n,ncol=a)
 pool<-rmvnorm(n=n,mean=muH[1,],sigma=diag(sigH))
-sigp<-1 
+sigp<-1 #standard deviation of environmental effect on phenotype. 
 Hg<-array(NA,c(n,2,K))#will hold alleles for all individuals in the population.
 Hp<-vector()#will hold phenotypes for all individuals in the population.
 for (i in 1:K){
@@ -55,11 +57,11 @@ for (t in 1:Tmax){
       for (j in 1:o){
         offspring<-offspring+1
         for (k in 1:2){
-          seg<-sample.int(2,n,replace=TRUE)#inherit from mom or dad
+          seg<-sample.int(2,n,replace=TRUE)#Mendelian 'seg'regation
           Hg2[,k,offspring]<- rowSums(Hg[,,parents[i,k]]*cbind(1-(seg-1),seg-1))
           #mutation
           if (as.numeric(runif(1)<(n*mu))==1) {
-            u<-sample.int(5,1)
+            u<-sample.int(10,1)
             Hg2[u,k,offspring]<-Hg2[u,k,offspring]+rnorm(1,0,sqrt(alpha2))
           }
         }
@@ -92,6 +94,8 @@ for (t in 1:Tmax){
   #End calculate heterozygocity
   
 }#END simulation (time)
+Sys.time()-start.time
+
 
 par(mfrow = c(3, 1),     #
     oma = c(2, 1, 0, 1), # two rows of text at the outer left and bottom margin
